@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.23.0
+    ports:
+      - 19090:9090
+    volumes:
+      - ./prometheus/data:/prometheus
+      - ./prometheus/config:/etc/prometheus
+  grafana:
+    image: grafana/grafana:7.3.6
+    ports:
+      - 13000:3000
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/config:/etc/grafana/provisioning
