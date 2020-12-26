@@ -1,5 +1,4 @@
 *.deb
 *.tar.gz
-prometheus*
-grafana*
-node_exporter*
+*-amd64
+data
