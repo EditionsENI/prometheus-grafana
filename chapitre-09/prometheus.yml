@@ -9,10 +9,20 @@ networks:
   monitoring: {}
 
 services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.38.6
+    networks: ["host"]
+    command: -logtostderr -docker_only
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/rootfs:ro
+      - /var/run:/var/run
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+
   node-exporter:
     image: prom/node-exporter:v1.0.1
-    networks:
-      - host
+    networks: ["host"]
     command: >-
       --path.procfs /host/proc
       --path.sysfs /host/proc
@@ -22,6 +32,7 @@ services:
       - /proc:/host/proc
       - /sys:/host/sys
       - /:/rootfs
+
   prometheus:
     image: prom/prometheus:v2.23.0
     networks: ["monitoring"]
@@ -36,6 +47,7 @@ services:
       - ./prometheus/config:/etc/prometheus
     extra_hosts:
       - host.docker.internal:host-gateway
+
   grafana:
     image: grafana/grafana:7.3.6
     networks: ["monitoring"]
