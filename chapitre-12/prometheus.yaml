@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: prometheus
+  name: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+      annotations:
+        config: |-
+          scrape_configs:
+            - job_name: prometheus
+              static_configs:
+                - targets: [localhost:9090]
+            - &kube-definition
+              job_name: kubernetes-nodes
+              scheme: https
+              bearer_token_file: >-
+                /var/run/secrets/kubernetes.io/serviceaccount/token
+              tls_config:
+                insecure_skip_verify: true
+              kubernetes_sd_configs:
+                - role: node
+              relabel_configs:
+                - action: labelmap
+                  regex: __meta_kubernetes_node_label_(.+)
+            - <<: *kube-definition
+              job_name: cadvisor
+              metrics_path: /metrics/cadvisor
+    spec:
+      serviceAccountName: prometheus
+      containers:
+        - image: prom/prometheus:v2.23.0
+          name: prometheus
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+      volumes:
+        - name: config
+          downwardAPI:
+            items:
+              - fieldRef:
+                  fieldPath: metadata.annotations['config']
+                path: prometheus.yml
