@@ -1,0 +1,41 @@
+groups:
+  - name: basic-postgres-scrapping
+    rules:
+
+    - alert: PGExporterScrapeError
+      expr: pg_exporter_last_scrape_error > 0
+      for: 60s
+      labels:
+        service: postgresql
+        severity: critical
+      annotations:
+        summary: >-
+          Postgres Exporter running on {{ $labels.job }}
+          (instance: {{ $labels.instance }}) is encountering
+          scrape errors processing queries. Error count:
+          ( {{ $value }} )
+
+    - alert: PGIsUp
+      expr: pg_up < 1
+      for: 60s
+      labels:
+        service: postgresql
+        severity: critical
+      annotations:
+        summary: >-
+          postgres_exporter running on {{ $labels.job }} is
+          unable to communicate with the configured database
+
+  - name: pg-replication-lag
+    rules:
+
+    - alert: PGReplicationLag
+      expr: pg_replication_lag / 3600 > 1
+      for: 10m
+      labels:
+        service: postgresql
+        severity: critical
+      annotations:
+        summary: >-
+          Postgres replication is lagging to much behind master
+          (more than 1 hour)

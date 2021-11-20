@@ -1,0 +1,18 @@
+[Unit]
+Description=PostgreSQL exporter for Prometheus
+Documentation=http://prometheus.io
+Wants=network-online.target
+
+[Service]
+User=postgres
+Group=postgres
+Restart=on-failure
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart=/opt/postgres_exporter/postgres_exporter
+Environment=DATA_SOURCE_NAME="user=postgres host=/var/run/postgresql/ port=5433 sslmode=disable"
+
+TimeoutStopSec=20
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
