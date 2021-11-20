@@ -1,0 +1,95 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+  - static_configs:
+    #- targets: [ localhost:9093 ]
+
+rule_files:
+  - rules/*.yaml
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['localhost:9090']
+  - job_name: 'node'
+    static_configs:
+    - targets: ['localhost:9100']
+    file_sd_configs:
+    - files: ['nodes/*.yaml']
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(xen-host-.*):(.*)'
+        target_label: xenhost
+        replacement: '$1'
+  - job_name: 'grafana'
+    static_configs:
+    - targets: ['localhost:3000']
+  # - job_name: 'win-exporter'
+    # static_configs:
+    # - targets: ['windows:9182']
+  # - job_name: 'postgres'
+    # static_configs:
+    # - targets: ['localhost:9187']
+  # - job_name: 'mysql'
+    # static_configs:
+    # - targets: ['localhost:9104']
+  - job_name: 'pushgateway'
+    honor_labels: true
+    static_configs:
+    - targets: ['localhost:9091']
+    
+  - job_name: 'smtp_status'
+    metrics_path: /probe
+    params:
+      module: [smtp_banner]
+    static_configs:
+      - targets: [ 'localhost:1025' ]
+    relabel_configs:
+      Write target address in target parameter
+      - source_labels: [__address__]
+        target_label: __param_target
+      Make instance label the target
+      - source_labels: [__param_target]
+        target_label: instance
+      Actually talk to the blackbox exporter though
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets: [ 'www.google.fr', "www.google.com", "prometheus.io" ]
+    relabel_configs:
+      # Write target address in target parameter
+      - source_labels: [__address__]
+        target_label: __param_target
+      # Make instance label the target
+      - source_labels: [__param_target]
+        target_label: instance
+      # Actually talk to the blackbox exporter though
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+
+  - job_name: 'snmp'
+    metrics_path: /snmp
+    params:
+      module: [if_mib_mycommunity]
+    static_configs:
+      - targets: [ '192.168.0.40' ]
+    relabel_configs:
+      Write target address in target parameter
+      - source_labels: [__address__]
+        target_label: __param_target
+      Make instance label the target
+      - source_labels: [__param_target]
+        target_label: instance
+      Actually talk to the snmp exporter though
+      - target_label: __address__
+        replacement: 127.0.0.1:9116
