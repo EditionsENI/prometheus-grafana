@@ -1,0 +1,29 @@
+groups:
+  - name: time-rules
+    rules:
+      - record: is_european_summer_time
+        expr: |
+          (vector(1) and (month() > 3 and month() < 10))
+          or
+          (vector(1) and (month() == 3 and (day_of_month() - day_of_week()) >= 25) and absent((day_of_month() >= 25) and (day_of_week() == 0)))
+          or
+          (vector(1) and (month() == 10 and (day_of_month() - day_of_week()) < 25) and absent((day_of_month() >= 25) and (day_of_week() == 0)))
+          or
+          (vector(1) and ((month() == 10 and hour() < 1) or (month() == 3 and hour() > 0)) and ((day_of_month() >= 25) and (day_of_week() == 0)))
+          or
+          vector(0)
+      - record: current_paris_time
+        expr: time() + (1 + is_european_summer_time) * 3600
+      - record: hour_9_19
+        expr: clamp_max(hour(current_paris_time) >= 9 < 19, 1)
+      - record: working_day
+        expr: clamp_max(day_of_week(current_paris_time) > 0 < 6, 1)
+      - record: working_hour
+        expr: hour_9_19 * working_day
+      - alert: QuietHours
+        expr: absent(working_hour)
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          description: 'This alert fires during quiet hours. It should be blackholed by Alertmanager.'

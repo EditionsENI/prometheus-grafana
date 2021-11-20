@@ -1,11 +1,39 @@
 route:
   group_by: ['alertname']
   group_wait: 30s
-  group_interval: 5m
-  repeat_interval: 1h
-  receiver: 'web.hook'
+  group_interval: 1m
+  repeat_interval: 1m
+  receiver: "email+slack"
+  routes:
+  - receiver: "null"
+    matchers:
+      - alertname = "QuietHours"
 receivers:
-- name: 'web.hook'
-  webhook_configs:
-  - url: 'http://127.0.0.1:5001/'
-inhibit_rules: []
+  - name: "null"
+  - name: email+slack
+    email_configs:
+      - to: 'my-team@eni.fr'
+        from: 'a-team@prometheus.fr'
+        smarthost: 'localhost:1025'
+        require_tls: false
+        # auth_username: 'my-user'
+        # auth_password: 'my-password'
+        # headers:
+          # Subject: '{{ template "custom-function" . }}'
+    slack_configs:
+      - channel: '#prometheus'
+        send_resolved: true
+        api_url: https://hooks.slack.com/services/XXXX/XXXX/XXXX
+inhibit_rules:
+  - source_matchers:
+      - kind = "xen-server"
+    target_matchers:
+      - kind = "xen-vm"
+    equal: [xenhost]
+  - source_matchers:
+      - alertname = "QuietHours"
+    # target_matchers: []
+    target_matchers:
+      - severity =~ "info|warning"
+
+templates: [ "custom.tmpl" ]

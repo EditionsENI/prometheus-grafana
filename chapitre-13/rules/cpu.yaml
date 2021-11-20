@@ -1,0 +1,14 @@
+groups:
+- name: system-activity
+  rules:
+  - alert: HighCPU
+    expr: |-
+      node_load1
+        /
+      count(node_cpu_seconds_total{mode="idle"}) without(mode,cpu)
+      > 1
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: CPU is heating up
