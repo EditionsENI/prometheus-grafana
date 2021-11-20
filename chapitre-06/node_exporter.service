@@ -1,0 +1,19 @@
+[Unit]
+Description=Node exporter
+Documentation=http://prometheus.io
+Wants=network-online.target
+
+[Service]
+User=root
+Group=nodeexport
+Restart=on-failure
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart=/opt/node_exporter/node_exporter \
+    --collector.systemd \
+    --collector.textfile.directory=/var/lib/node_exporter
+
+TimeoutStopSec=20
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
