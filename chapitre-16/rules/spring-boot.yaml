@@ -1,0 +1,22 @@
+groups:
+- name: SpringBootAlerts
+  rules:
+  - alert: HTTPError
+    expr: >
+      sum(
+        rate(
+          http_server_requests_seconds_count{status=~"[45].."}[5m]
+        )
+      ) > 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: Too much 4xx or 5xx errors on Spring boot apps
+  - alert: LogError
+    expr: sum(rate(logback_events_total{level="error"}[5m])) > 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: Too much log error activity since 5 minutes

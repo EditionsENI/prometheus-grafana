@@ -1,0 +1,17 @@
+groups:
+- name: FlaskErrors
+  rules:
+  - alert: HTTPError
+    expr: >
+      sum(
+        rate(
+          flask_http_request_duration_seconds_count{
+            status=~"[45].."
+          }[5m]
+        )
+      ) > 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: Too much 4xx or 5xx errors on Flask apps
