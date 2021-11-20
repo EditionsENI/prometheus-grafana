@@ -1,0 +1,7 @@
+# HELP room_temperature_celsius monitor for room temperature
+# TYPE room_temperature_celsius gauge
+room_temperature_celsius 42
+
+# HELP room_humidity_percent monitor for room humidity
+# TYPE room_humidity_percent gauge
+room_humidity_percent 96

@@ -1,0 +1,17 @@
+grafana:
+  deploymentStrategy:
+    type: Recreate
+  ingress:
+    enabled: true
+    hosts: &grafana-hosts
+      - grafana.kubernetes.eni.yannig.ovh
+    tls:
+      - hosts: *grafana-hosts
+    enabled: true
+  resources:
+    limits:
+      cpu: 500m
+      memory: 150Mi
+    requests:
+      cpu: 50m
+      memory: 100Mi

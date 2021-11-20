@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: monitoring-eni
+  labels:
+    # Don't forget this label
+    # If it's not there, the service monitor will be ignored
+    # by the default operated Prometheus
+    release: prom
+spec:
+  endpoints:
+  - port: http
+  selector:
+    matchLabels:
+      app: my-app 

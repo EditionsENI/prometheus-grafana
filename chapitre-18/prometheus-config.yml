@@ -1,0 +1,15 @@
+prometheus:
+  ingress:
+    enabled: true
+    hosts: &prometheus-hosts
+      - "prometheus.kubernetes.eni.yannig.ovh"
+    tls:
+      - hosts: *prometheus-hosts
+  prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi

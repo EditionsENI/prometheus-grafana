@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: monitoring-eni
+  labels:
+    # Don't forget this label
+    # If it's not there, the service monitor will be ignored
+    # by the default operated Prometheus
+    release: prom
+spec:
+  prober:
+    url: blackbox-prometheus-blackbox-exporter.monitoring:9115
+  module: http_2xx
+  targets:
+    staticConfig:
+      static:
+        - https://www.editions-eni.fr
