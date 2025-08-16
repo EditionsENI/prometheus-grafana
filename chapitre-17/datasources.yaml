@@ -1,0 +1,20 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://localhost:9090
+    isDefault: true
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://localhost:3100
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+      # Exemple : extraire un traceID depuis un log et créer un lien vers Jaeger
+      # - name: traceID
+      #   matcherRegex: '"traceID":"(\w+)"'
+      #   url: http://localhost:16686/trace/${__value.raw}
+      #   datasourceUid: jaeger

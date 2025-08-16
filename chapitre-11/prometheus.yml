@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: prometheus
+  name: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+      # Prometheus configuration
+      annotations:
+        config: |-
+          global:
+            scrape_interval: 15s
+          scrape_configs:
+            - job_name: prometheus
+              static_configs:
+                - targets: [ localhost:9090 ]
+            - &kube-definition
+              job_name: kubernetes-nodes
+              scheme: https
+              bearer_token_file: >-
+                /var/run/secrets/kubernetes.io/serviceaccount/token
+              tls_config:
+                # ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                # server_name: kind-control-plane
+                insecure_skip_verify: true
+              kubernetes_sd_configs:
+                - role: node
+              relabel_configs:
+                - action: labelmap
+                  regex: __meta_kubernetes_node_label_(.+)
+            - <<: *kube-definition
+              job_name: cadvisor
+              metrics_path: /metrics/cadvisor
+            - <<: *kube-definition
+              job_name: kubernetes-pods
+              scheme: http
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels:
+                    - __meta_kubernetes_pod_annotation_prometheus_io_scrape
+                  action: keep
+                  regex: true
+                - source_labels:
+                    - __meta_kubernetes_pod_annotation_prometheus_io_path
+                  action: replace
+                  target_label: __metrics_path__
+                  regex: (.+)
+                - source_labels:
+                    - __meta_kubernetes_pod_annotation_prometheus_io_scheme
+                  action: replace
+                  target_label: __scheme__
+                  regex: (.+)
+                  replacement: $1
+                - source_labels:
+                    - __address__
+                    - __meta_kubernetes_pod_annotation_prometheus_io_port
+                  action: replace
+                  regex: ([^:]+)(?::\d+)?;(\d+)
+                  replacement: $1:$2
+                  target_label: __address__
+                - action: labelmap
+                  regex: __meta_kubernetes_pod_label_(.+)
+                - source_labels:
+                    - __meta_kubernetes_namespace
+                  action: replace
+                  target_label: kubernetes_namespace
+                - source_labels:
+                    - __meta_kubernetes_pod_name
+                  action: replace
+                  target_label: kubernetes_pod_name
+                - source_labels:
+                    - __meta_kubernetes_pod_phase
+                  regex: Pending|Succeeded|Failed
+                  action: drop
+    spec:
+      serviceAccountName: prometheus
+      containers:
+      - image: prom/prometheus:v3.2.1
+        name: prometheus
+        volumeMounts:
+          - mountPath: /etc/prometheus
+            name: config
+      volumes:
+        - name: config
+          downwardAPI:
+            items:
+              - fieldRef:
+                  fieldPath: metadata.annotations['config']
+                path: prometheus.yml
