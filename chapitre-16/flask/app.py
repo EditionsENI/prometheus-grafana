@@ -3,6 +3,7 @@
 from flask import Flask
 from healthcheck import HealthCheck, EnvironmentDump
 from prometheus_flask_exporter import PrometheusMetrics
+from prometheus_client import start_http_server
 
 
 index = """
@@ -13,12 +14,12 @@ Access <a href='/environment'>environnement information</a><br/>
 Access <a href='/metrics'>metrics</a><br/>
 """
 
+prom = start_http_server(port=5090)
 app = Flask(__name__)
 
-HealthCheck(app, "/healthcheck")
-EnvironmentDump(app, "/environment")
-PrometheusMetrics(app, "/metrics")
-
+app.add_url_rule('/healthcheck', 'healthcheck', view_func=HealthCheck().run)
+app.add_url_rule('/environment', 'environment', view_func=EnvironmentDump().run)
+PrometheusMetrics(app, path=None)
 
 @app.route('/')
 def root():

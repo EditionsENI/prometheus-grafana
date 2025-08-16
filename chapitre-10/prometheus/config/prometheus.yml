@@ -18,9 +18,6 @@ scrape_configs:
         role: nodes
         port: 9323
     relabel_configs: &relabel-node
-      - action: replace
-        target_label: "team"
-        replacement: "system"
       - action: labelmap
         regex: __meta_dockerswarm_node_(.+)
 
@@ -41,9 +38,6 @@ scrape_configs:
       - host: unix:///var/run/docker.sock
         role: tasks
     relabel_configs:
-      - action: replace
-        target_label: "team"
-        replacement: "system"
       # Filter containers without this label
       - source_labels: [__meta_dockerswarm_service_label_prom_scrape]
         regex: "true"

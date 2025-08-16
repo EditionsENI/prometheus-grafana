@@ -1,4 +1,3 @@
-six
 Flask
-healthcheck
+py-healthcheck
 prometheus_flask_exporter
