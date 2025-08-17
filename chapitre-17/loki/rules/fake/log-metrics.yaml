@@ -1,0 +1,6 @@
+groups:
+- name: log-metrics
+  interval: 1m
+  rules:
+  - record: job:systemd_rate
+    expr: rate({job="systemd-journal"}[5m])
