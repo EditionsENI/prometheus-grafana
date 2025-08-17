@@ -1,0 +1,21 @@
+[Unit]
+Description=Prometheus
+Documentation=http://prometheus.io
+Wants=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Restart=on-failure
+ExecReload=/bin/kill -HUP $MAINPID
+WorkingDirectory=/var/lib/prometheus
+ExecStart=/opt/prometheus/prometheus \
+               --config.file=/etc/prometheus/prometheus.yml \
+               --storage.tsdb.path=/var/lib/prometheus \
+               --web.enable-remote-write-receiver
+
+TimeoutStopSec=20
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
