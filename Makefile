@@ -1,3 +1,6 @@
 
 fichiers:
-	cd chapitres ; ./make-archive.sh
+	./make-archive.sh
+
+clean:
+	rm -f fichiers-chapitre-*.tar.gz
