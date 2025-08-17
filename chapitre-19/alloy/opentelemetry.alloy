@@ -1,0 +1,56 @@
+otelcol.receiver.otlp "default" {
+  http {}
+  output {
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    traces  = [otelcol.exporter.otlp.tempo.input, otelcol.connector.servicegraph.default.input, otelcol.connector.spanmetrics.default.input]
+  }
+}
+
+otelcol.connector.spanmetrics "default" {
+  metrics_flush_interval = "15s"
+  metrics_expiration = "5m"
+  namespace = "traces_spanmetrics"
+  histogram {
+    exponential {}
+  }
+  exemplars {
+    enabled = true
+  }
+  output {
+    metrics = [otelcol.exporter.prometheus.default.input]
+  }
+}
+
+otelcol.connector.servicegraph "default" {
+  dimensions = ["service.name"]
+  output {
+    metrics = [otelcol.exporter.prometheus.default.input]
+  }
+}
+
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://localhost:9090/api/v1/write"
+    send_native_histograms = true
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "localhost:4317"
+    tls {
+      insecure             = true
+      insecure_skip_verify = true
+    }
+  }
+}
+

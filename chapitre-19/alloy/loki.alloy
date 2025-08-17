@@ -1,0 +1,59 @@
+loki.process "systemd_journal" {
+  forward_to = [loki.write.default.receiver]
+
+  stage.match {
+    selector = "{job=\"systemd-journal\"}"
+
+    stage.metrics { }
+  }
+}
+
+discovery.relabel "systemd_journal" {
+  targets = []
+
+  rule {
+    source_labels = ["__journal__hostname"]
+    target_label  = "host"
+  }
+
+  rule {
+    source_labels = ["__journal__systemd_unit"]
+    regex         = "(.+)"
+    target_label  = "systemd_unit"
+  }
+
+  rule {
+    source_labels = ["__journal__systemd_user_unit"]
+    regex         = "(.+)"
+    target_label  = "systemd_user_unit"
+  }
+
+  rule {
+    source_labels = ["__journal__transport"]
+    regex         = "(.+)"
+    target_label  = "transport"
+  }
+
+  rule {
+    source_labels = ["__journal_priority_keyword"]
+    regex         = "(.+)"
+    target_label  = "severity"
+  }
+}
+
+loki.source.journal "systemd_journal" {
+  path          = "/var/log/journal"
+  relabel_rules = discovery.relabel.systemd_journal.rules
+  forward_to    = [loki.process.systemd_journal.receiver]
+  labels        = {
+    job = "systemd-journal",
+  }
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://localhost:3100/loki/api/v1/push"
+  }
+  external_labels = {}
+}
+
