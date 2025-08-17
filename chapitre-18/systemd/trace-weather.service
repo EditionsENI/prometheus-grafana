@@ -1,0 +1,12 @@
+[Unit]
+Description=Récupération de la température avec injection de traces OTEL
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Environment=OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+Environment=OTEL_SERVICE_NAME=weather-script
+Type=oneshot
+ExecStart=/usr/bin/otel-cli exec --kind client --name launch-script --tp-print -- /usr/local/bin/trace_weather.sh
+StandardOutput=journal
+StandardError=journal

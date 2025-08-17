@@ -1,0 +1,10 @@
+[Unit]
+Description=Exécution périodique de trace-weather.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+Unit=trace-weather.service
+
+[Install]
+WantedBy=timers.target
